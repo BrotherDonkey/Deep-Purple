@@ -177,6 +177,7 @@ var playerXSpeed = 7;
 var gravity = 30;
 var jumpSpeed = 17;
 var arrows = trackKeys(arrowCodes);
+// var lives = 3;
 
 
 
@@ -585,7 +586,7 @@ function trackKeys(codes) {
             var down = event.type == "keydown";
             pressed[codes[event.keyCode]] = down;
             event.preventDefault();
-            console.log(event.keyCode, "pressed");
+            // console.log(event.keyCode, "pressed");
         }
     }
     addEventListener("keydown", handler);
@@ -633,19 +634,26 @@ function runLevel(level, Display, andThen) {
     });
 }
 
-function runGame(plans, Display){
-    function startLevel(n) {
-        runLevel(new Level(plans[n]), Display, function(status) {
-            if (status == "lost")
-              startLevel(n);
-            else if (n < plans.length - 1)
-              startLevel(n + 1);
-            else 
-              console.log("You win!");
-        });
+function runGame(plans, Display) {
+function startLevel(n, lives) {
+  runLevel(new Level(plans[n]), Display, function(status) {
+    if (status == "lost") {
+      if (lives > 0) {
+        console.log(lives - 1, "lives left");
+        startLevel(n, lives - 1);
+      } else {
+        console.log("Game over");
+        startLevel(0, 3);
+      }     
+    } else if (n < plans.length - 1) {
+      startLevel(n + 1, lives);
+    } else {
+      console.log("You win!");
     }
-    startLevel(0);
+  });
 }
+startLevel(0, 3);
+};
 
 
 // .__       .__  __  .__       .__  .__                    ___.   .__  __         .__   ._.
