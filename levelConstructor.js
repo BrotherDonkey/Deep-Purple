@@ -384,7 +384,7 @@ DOMDisplay.prototype.scrollPlayerIntoView = function() {
 };
 
 //clear a level
-DOMDisplay.prototype.clear = function(){
+DOMDisplay.prototype.clear = function() {
     this.wrap.parentNode.removeChild(this.wrap);
 };
 
