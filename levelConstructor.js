@@ -176,6 +176,8 @@ var wobbleSpeed = 8, wobbleDist = 0.07;
 var playerXSpeed = 7;
 var gravity = 30;
 var jumpSpeed = 17;
+var arrows = trackKeys(arrowCodes);
+
 
 
         
@@ -357,17 +359,15 @@ DOMDisplay.prototype.drawFrame = function(){
 };
 
 //keep the player always in view
-DOMDisplay.prototype.scrollPlayerIntoView = function(){
+DOMDisplay.prototype.scrollPlayerIntoView = function() {
     // establish boundary variables, with eye to keep player in middle 1/3 at all times
     var width = this.wrap.clientWidth;
     var height = this.wrap.clientHeight;
     var margin = width / 3;
 
     //the viewport
-    var left = this.wrap.scrollLeft,
-        right = left + width;
-    var top = this.wrap.scrollTop,
-        bottom = top + height;
+    var left = this.wrap.scrollLeft, right = left + width;
+    var top = this.wrap.scrollTop, bottom = top + height;
     
     var player = this.level.player;
     var center = player.pos.plus(player.size.times(0.5))
@@ -376,7 +376,7 @@ DOMDisplay.prototype.scrollPlayerIntoView = function(){
     if (center.x < left + margin)
         this.wrap.scrollLeft = center.x - margin;
     else if (center.x > right - margin)
-        this.wrap.scrollLeft = center.x + margin; - width;
+        this.wrap.scrollLeft = center.x + margin - width;
     if (center.y < top + margin)
         this.wrap.scrollTop = center.y - margin;
     else if (center.y > bottom - margin)
@@ -486,7 +486,7 @@ Lava.prototype.act = function(step, level) {
 
 
 
-Coin.prototype.act = function(step){
+Coin.prototype.act = function(step) {
     this.wobble += step * wobbleSpeed;
     var wobblePos = Math.sin(this.wobble) * wobbleDist; 
     this.pos = this.basePos.plus(new Vector(0, wobblePos));
@@ -552,15 +552,15 @@ Player.prototype.act = function(step, level, keys) {
 //           \/          \/                      \/     \/     \/     \/     \/     \/ 
 
 
-Level.prototype.playerTouched = function(type, actor){
-  if (type == "lava" && this.status == null){
+Level.prototype.playerTouched = function(type, actor) {
+  if (type == "lava" && this.status == null) {
       this.status = "lost";
       this.finishDelay = 1;
   } else if (type == "coin") {
-      this.actors = this.actors.filter(function(other){
+      this.actors = this.actors.filter(function(other) {
           return other != actor;
       });
-      if (!this.actors.some(function(){
+      if (!this.actors.some(function(actor){
           return actor.type == "coin";
       })) {
           this.status = "won";
@@ -607,7 +607,7 @@ function runAnimation(frameFunc){
     function frame(time){
         var stop = false;
         
-        if (lastTime != null){
+        if (lastTime != null) {
             var timeStep = Math.min(time - lastTime, 100) / 1000;
             stop = frameFunc(timeStep) === false;
         }
@@ -617,29 +617,29 @@ function runAnimation(frameFunc){
             requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-}
+};
 
-var arrows = trackKeys(arrowCodes);
 
-function runLevel(level, Display, andThen){
+function runLevel(level, Display, andThen) {
     var display = new Display(document.body, level);
-    runAnimation(function(step){
+    runAnimation(function(step) {
         level.animate(step, arrows);
         display.drawFrame(step);
-        if (level.isFinished()){
+        if (level.isFinished()) {
             display.clear();
             if (andThen)
-            andThen(level.status);
+                andThen(level.status);
+            return false;
         }
     });
 }
 
 function runGame(plans, Display){
     function startLevel(n) {
-        runLevel(new Level(plans[n]), Display, function(status){
+        runLevel(new Level(plans[n]), Display, function(status) {
             if (status == "lost")
               startLevel(n);
-            else if (n < plans.length -1)
+            else if (n < plans.length - 1)
               startLevel(n + 1);
             else 
               console.log("You win!");
@@ -656,22 +656,6 @@ function runGame(plans, Display){
 // |__|___|  /__||__| |__(____  /____/__/_____ \\___  > /\   |___  /__||__|  \___  >___|  /_
 //         \/                 \/              \/    \/  )/       \/              \/     \/\/
 
-
-// var simpleLevelPLan = [
-//     "                 =  xxxx ",
-//     "x       o           xxxx ",
-//     "x      xxxx       x!!xxxx",
-//     " @             x  x!!xx  ",
-//     "xxxx       xxxxx!!xx     ",
-//     "xxxxxxx!!!!xxxxx!!xxx    ",
-//     "xxxxxxx!!!!xxxxxxxxxx    ",
-//     ];
-
-
-
-
-// var simpleLevel = new Level(simpleLevelPLan);
-// var display = new DOMDisplay(document.body, simpleLevel);
 
 
 runGame(GAME_LEVELS, DOMDisplay);

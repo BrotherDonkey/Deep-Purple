@@ -3,10 +3,9 @@ body {
 }
 
 .background {
-    margin: 0 auto;
+
     background: rgb(52, 166, 251);
     border-spacing: 0;
-    min-height: 200px;
 }
 
 .background td {
