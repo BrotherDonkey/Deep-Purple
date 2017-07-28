@@ -293,102 +293,144 @@ Level.prototype.isFinished = function(){
 };
 
 
-            //     .___                    .__                
-            //   __| _/___________ __  _  _|__| ____    ____  
-            //  / __ |\_  __ \__  \\ \/ \/ /  |/    \  / ___\ 
-            // / /_/ | |  | \// __ \\     /|  |   |  \/ /_/  >
-            // \____ | |__|  (____  /\/\_/ |__|___|  /\___  / 
-            //      \/            \/               \//_____/  
+// ________   ________      _____    ________                      .__                
+// \______ \  \_____  \    /     \   \______ \____________ __  _  _|__| ____    ____  
+//  |    |  \  /   |   \  /  \ /  \   |    |  \_  __ \__  \\ \/ \/ /  |/    \  / ___\ 
+//  |    `   \/    |    \/    Y    \  |    `   \  | \// __ \\     /|  |   |  \/ /_/  >
+// /_______  /\_______  /\____|__  / /_______  /__|  (____  /\/\_/ |__|___|  /\___  / 
+//         \/         \/         \/          \/           \/               \//_____/  
 
 
-//ELEMENT CREATE WITH CLASS
+// //ELEMENT CREATE WITH CLASS
 
-function elt(name, className){
-    var elt = document.createElement(name);
-    if (className) elt.className = className;
-    return elt;
+// function elt(name, className){
+//     var elt = document.createElement(name);
+//     if (className) elt.className = className;
+//     return elt;
+// }
+
+// // DISPLAY ELEMENT IN DOM
+
+// function DOMDisplay(parent, level){
+//     this.wrap = parent.appendChild(elt("div", "game"));
+//     this.level = level;
+    
+//     this.wrap.appendChild(this.drawBackground());
+//     this.actorLayer = null;
+//     this.drawFrame();
+    
+//     // console.log("DOMDisplay");
+// }
+
+// DOMDisplay.prototype.drawBackground = function(){
+//     var table = elt("table", "background");
+//     table.style.width = this.level.width * scale + "px";
+    
+//     this.level.grid.forEach(function(row){
+//         var rowElt = table.appendChild(elt("tr"));
+//         rowElt.style.height = scale + "px";
+//         row.forEach(function(type){
+//             rowElt.appendChild(elt("td", type));
+//         });
+//     });
+//     return table;
+// };
+
+// DOMDisplay.prototype.drawActors = function(){
+//     var wrap = elt("div");
+//     this.level.actors.forEach(function(actor){
+//       var rect = wrap.appendChild(elt("div", "actor "+ actor.type));
+//       rect.style.width = actor.size.x * scale + "px";
+//       rect.style.height = actor.size.y * scale + "px";
+//       rect.style.left = actor.pos.x * scale + "px";
+//       rect.style.top = actor.pos.y * scale + "px";
+//     //   console.log("added", rect, rect.classList, rect.style);
+//     });
+//     return wrap;
+// };
+
+// DOMDisplay.prototype.drawFrame = function(){
+//     if (this.actorLayer)
+//         this.wrap.removeChild(this.actorLayer);
+    
+//     this.actorLayer = this.wrap.appendChild(this.drawActors());
+//     this.wrap.className = "game " + (this.level.status || "");
+//     this.scrollPlayerIntoView();
+// };
+
+// //keep the player always in view
+// DOMDisplay.prototype.scrollPlayerIntoView = function() {
+//     // establish boundary variables, with eye to keep player in middle 1/3 at all times
+//     var width = this.wrap.clientWidth;
+//     var height = this.wrap.clientHeight;
+//     var margin = width / 3;
+
+//     //the viewport
+//     var left = this.wrap.scrollLeft, right = left + width;
+//     var top = this.wrap.scrollTop, bottom = top + height;
+    
+//     var player = this.level.player;
+//     var center = player.pos.plus(player.size.times(0.5))
+//                 .times(scale);
+    
+//     if (center.x < left + margin)
+//         this.wrap.scrollLeft = center.x - margin;
+//     else if (center.x > right - margin)
+//         this.wrap.scrollLeft = center.x + margin - width;
+//     if (center.y < top + margin)
+//         this.wrap.scrollTop = center.y - margin;
+//     else if (center.y > bottom - margin)
+//         this.wrap.scrollTop - center.y + margin - height;
+// };
+
+// //clear a level
+// DOMDisplay.prototype.clear = function() {
+//     this.wrap.parentNode.removeChild(this.wrap);
+// };
+
+
+// _________                                     ________                      .__                
+// \_   ___ \_____    _______  _______    ______ \______ \____________ __  _  _|__| ____    ____  
+// /    \  \/\__  \  /    \  \/ /\__  \  /  ___/  |    |  \_  __ \__  \\ \/ \/ /  |/    \  / ___\ 
+// \     \____/ __ \|   |  \   /  / __ \_\___ \   |    `   \  | \// __ \\     /|  |   |  \/ /_/  >
+//  \______  (____  /___|  /\_/  (____  /____  > /_______  /__|  (____  /\/\_/ |__|___|  /\___  / 
+//         \/     \/     \/           \/     \/          \/           \/               \//_____/  
+
+// create element for canvas display
+function CanvasDisplay(parent, level){
+  this.canvas = document.createElement("canvas");
+  this.canvas.width = Math.min(600, level.width * scale);
+  this.canvas.height = Math.min(450, level.height * scale);
+  parent.appendChild(this.canvas);
+  this.cx = this.canvas.getContext("2d");
+  
+  this.level = level;
+  this.animationTime = 0;
+  this.flipPlayer = false;
+  
+  this.viewport = {
+      left: 0,
+      top: 0,
+      width: this.canvas.width / scale,
+      height: this.canvas.height / scale
+  }
+  
+  this.drawFrame(0);
+  
+};
+
+//clear canvas method
+CanvasDisplay.prototype.clear = function(){
+    this.canvas.parentNode.removeChild(this.canvas);
+};
+
+CanvasDisplay.prototype.drawFrame = function(step){
+    this.animationTime += step;
+    this.updateViewport();
+    this.clearDisplay();
+    this.drawBackground();
+    this.drawActors();
 }
-
-// DISPLAY ELEMENT IN DOM
-
-function DOMDisplay(parent, level){
-    this.wrap = parent.appendChild(elt("div", "game"));
-    this.level = level;
-    
-    this.wrap.appendChild(this.drawBackground());
-    this.actorLayer = null;
-    this.drawFrame();
-    
-    // console.log("DOMDisplay");
-}
-
-DOMDisplay.prototype.drawBackground = function(){
-    var table = elt("table", "background");
-    table.style.width = this.level.width * scale + "px";
-    
-    this.level.grid.forEach(function(row){
-        var rowElt = table.appendChild(elt("tr"));
-        rowElt.style.height = scale + "px";
-        row.forEach(function(type){
-            rowElt.appendChild(elt("td", type));
-        });
-    });
-    return table;
-};
-
-DOMDisplay.prototype.drawActors = function(){
-    var wrap = elt("div");
-    this.level.actors.forEach(function(actor){
-       var rect = wrap.appendChild(elt("div", "actor "+ actor.type));
-       rect.style.width = actor.size.x * scale + "px";
-       rect.style.height = actor.size.y * scale + "px";
-       rect.style.left = actor.pos.x * scale + "px";
-       rect.style.top = actor.pos.y * scale + "px";
-    //   console.log("added", rect, rect.classList, rect.style);
-    });
-    return wrap;
-};
-
-DOMDisplay.prototype.drawFrame = function(){
-    if (this.actorLayer)
-        this.wrap.removeChild(this.actorLayer);
-    
-    this.actorLayer = this.wrap.appendChild(this.drawActors());
-    this.wrap.className = "game " + (this.level.status || "");
-    this.scrollPlayerIntoView();
-};
-
-//keep the player always in view
-DOMDisplay.prototype.scrollPlayerIntoView = function() {
-    // establish boundary variables, with eye to keep player in middle 1/3 at all times
-    var width = this.wrap.clientWidth;
-    var height = this.wrap.clientHeight;
-    var margin = width / 3;
-
-    //the viewport
-    var left = this.wrap.scrollLeft, right = left + width;
-    var top = this.wrap.scrollTop, bottom = top + height;
-    
-    var player = this.level.player;
-    var center = player.pos.plus(player.size.times(0.5))
-                .times(scale);
-    
-    if (center.x < left + margin)
-        this.wrap.scrollLeft = center.x - margin;
-    else if (center.x > right - margin)
-        this.wrap.scrollLeft = center.x + margin - width;
-    if (center.y < top + margin)
-        this.wrap.scrollTop = center.y - margin;
-    else if (center.y > bottom - margin)
-        this.wrap.scrollTop - center.y + margin - height;
-};
-
-//clear a level
-DOMDisplay.prototype.clear = function() {
-    this.wrap.parentNode.removeChild(this.wrap);
-};
-
-
 
 
 // VECTOR CONTSTRUCTOR
